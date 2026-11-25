@@ -125,6 +125,9 @@ button:disabled { cursor: default; }
 .brand { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 0; }
 .brand-mark { width: 40px; height: 40px; border-radius: 14px; background: var(--s3); color: var(--on-sun); display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 17px; box-shadow: 0 3px 0 var(--sun-deep); transform: rotate(-6deg); }
 .brand-name { font-family: var(--font-display); font-weight: 700; font-size: 22px; }
+.sound-btn { display: inline-flex; align-items: center; gap: 7px; }
+.sound-btn svg { width: 18px; height: 18px; flex: none; }
+.sound-btn[aria-pressed="true"] { background: var(--s2-soft); border-color: var(--s2); box-shadow: 0 3px 0 var(--s2); }
 .xp-pill { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 2px solid var(--line); border-radius: 999px; padding: 5px 14px 5px 6px; font-size: 14.5px; font-weight: 700; }
 .xp-coin { background: var(--gold-soft); color: var(--gold); border-radius: 999px; padding: 2px 10px; font-weight: 800; font-size: 13.5px; }
 .back { border: 2px solid var(--line); border-radius: 999px; padding: 7px 16px; font-size: 14.5px; font-weight: 700; background: var(--surface); box-shadow: 0 3px 0 var(--line); transition: transform .12s ease, border-color .15s ease; }
@@ -458,6 +461,7 @@ button:disabled { cursor: default; }
       <span class="brand-name">Revenue Quest</span>
     </button>
     <div class="top-right">
+      <button class="back sound-btn" data-action="sound" id="sound-btn" aria-pressed="false"></button>
       <button class="back" data-action="scrapbook" id="top-book" hidden>Scrapbook</button>
       <div class="xp-pill"><span class="xp-coin mono" id="xp-total">0 XP</span><span id="rank-small">Trainee</span></div>
     </div>
@@ -1574,7 +1578,54 @@ function parseNum(v) {
   return parseFloat(s);
 }
 
+/* =====================================================================
+   Fox voice (off until the player switches it on)
+   ===================================================================== */
+const SKEY = "ifrs15-revenue-quest-sound";
+const VOICE = {
+  correct: ["correct-1", "correct-2", "correct-3", "correct-4", "correct-5", "correct-6", "correct-7", "correct-8"],
+  streak: ["streak-1", "streak-2"],
+  retry: ["retry-right"],
+  wrong: ["wrong-1", "wrong-2"],
+  done: ["level-done"]
+};
+let soundOn = false;
+try { soundOn = localStorage.getItem(SKEY) === "on"; } catch (e) {}
+let voiceNow = null;
+let voiceLast = "";
+function speak(kind) {
+  if (!soundOn || !VOICE[kind]) return;
+  const opts = VOICE[kind].filter(f => f !== voiceLast);
+  const file = pick(opts.length ? opts : VOICE[kind]);
+  voiceLast = file;
+  try {
+    if (voiceNow) voiceNow.pause();
+    voiceNow = new Audio("assets/voice/" + file + ".mp3");
+    voiceNow.volume = 0.9;
+    const p = voiceNow.play();
+    if (p && p.catch) p.catch(() => {});
+  } catch (e) {}
+}
+function soundIcon(on) {
+  return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="none"/>' +
+    (on ? '<path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>' : '<path d="M16 9.5l5 5M21 9.5l-5 5"/>') + '</svg>';
+}
+function updateSoundBtn() {
+  const b = document.getElementById("sound-btn");
+  b.innerHTML = soundIcon(soundOn) + '<span>Fox voice ' + (soundOn ? "on" : "off") + '</span>';
+  b.setAttribute("aria-pressed", soundOn ? "true" : "false");
+  b.setAttribute("aria-label", soundOn ? "Turn the fox voice off" : "Turn the fox voice on");
+}
+function toggleSound() {
+  soundOn = !soundOn;
+  try { localStorage.setItem(SKEY, soundOn ? "on" : "off"); } catch (e) {}
+  updateSoundBtn();
+  if (soundOn) speak("correct");
+  else if (voiceNow) voiceNow.pause();
+}
+
 function showRetry() {
+  speak("wrong");
   const fb = document.getElementById("fb");
   const line = adopted() ? say(pick(TILT_RETRY)) : "Not quite. Have another look?";
   fb.className = "fb retry";
@@ -1595,6 +1646,9 @@ function finish(score, detail, second) {
   S.results.push({ score: score, prompt: q.prompt, scenario: q.scenario });
 
   const cr = compAnswer(q, score, second);
+  if (full) speak(S.streak >= 3 ? (S.streak % 2 ? "streak" : "correct") : "correct");
+  else if (second && score > 0) speak("retry");
+  else if (score === 0 && !S.attempt) speak("wrong");
 
   const cls = full ? "good" : score >= 0.5 ? "mid" : "bad";
   const verdict = full ? (bonus ? "On a roll! Streak bonus" : pick(["Nailed it!", "Spot on!", "Yes, exactly!"])) : second && score > 0 ? "Got it on the second look" : score > 0 ? "Partly right, nice work" : "Not quite, and that's okay";
@@ -1791,6 +1845,7 @@ function renderResults() {
     '</div>';
   scrollTop();
   if (stars === 3) confetti();
+  if (stars >= 1) speak("done");
 }
 
 /* =====================================================================
@@ -1873,6 +1928,7 @@ document.addEventListener("click", e => {
     case "cancel-rename": renaming = false; renderHome(); break;
     case "suggest": { const i = document.getElementById("fox-name"); if (i) { i.value = el.dataset.name; i.focus(); } break; }
     case "close-overlay": closeOverlay(); break;
+    case "sound": toggleSound(); break;
     case "reset":
       if (!resetArmed) { resetArmed = true; el.textContent = "Click again to erase all progress and your fox"; el.classList.add("armed"); }
       else { resetArmed = false; progress = {}; comp = freshComp(); save(); saveComp(); renaming = false; renderHome(); }
@@ -1892,6 +1948,7 @@ document.addEventListener("keydown", e => {
   }
 });
 
+updateSoundBtn();
 renderHome();
 })();
 </script>
