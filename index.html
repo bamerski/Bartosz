@@ -494,6 +494,7 @@ button:disabled { cursor: default; }
     </button>
     <div class="top-right">
       <button class="back sound-btn" data-action="sound" id="sound-btn" aria-pressed="false"></button>
+      <button class="back sound-btn" data-action="music" id="music-btn" aria-pressed="false"></button>
       <button class="back" data-action="scrapbook" id="top-book" hidden>Scrapbook</button>
       <div class="xp-pill"><span class="xp-coin mono" id="xp-total">0 XP</span><span id="rank-small">Trainee</span></div>
     </div>
@@ -1201,6 +1202,7 @@ function pumpToasts() {
 function unlock(id) {
   if (!adopted() || comp.moments[id]) return false;
   comp.moments[id] = new Date().toISOString().slice(0, 10);
+  sfx("unlock", 250);
   saveComp();
   const m = MOMENT[id];
   toast(sceneSvg(id) + '<div><span class="toast-k">' + (m.rare ? "Rare moment unlocked" : "New scrapbook moment") + '</span><b>' + m.title + '</b></div>');
@@ -1242,6 +1244,7 @@ function compAnswer(q, score, second) {
   if (comp.combo >= 5) unlock("shooting");
   if (comp.combo >= 10) unlock("fireflies");
   if (comp.combo >= 20) unlock("aurora");
+  if (golden) sfx("acorn", 200);
   if (golden && !unlock("golden")) toast(sceneSvg("golden") + '<div><span class="toast-k">Lucky find</span><b>Another golden acorn! +10 acorns</b></div>');
   if (comp.acorns >= 100) unlock("hundred");
   if (scarfDone) unlock("scarf");
@@ -1664,39 +1667,98 @@ let soundOn = false;
 try { soundOn = localStorage.getItem(SKEY) === "on"; } catch (e) {}
 let voiceNow = null;
 let voiceLast = "";
-function speak(kind) {
+let voiceTimer = 0;
+function speak(kind, delay) {
   if (!soundOn || !VOICE[kind]) return;
   const opts = VOICE[kind].filter(f => f !== voiceLast);
   const file = pick(opts.length ? opts : VOICE[kind]);
   voiceLast = file;
+  clearTimeout(voiceTimer);
+  voiceTimer = setTimeout(() => {
+    try {
+      if (voiceNow) voiceNow.pause();
+      voiceNow = new Audio("assets/voice/" + file + ".mp3");
+      voiceNow.volume = 0.9;
+      duckMusic(true);
+      voiceNow.addEventListener("ended", () => duckMusic(false));
+      const p = voiceNow.play();
+      if (p && p.catch) p.catch(() => duckMusic(false));
+    } catch (e) {}
+  }, delay || 0);
+}
+
+/* Sound effects (follow the Sound switch) */
+const SFX_VOL = { correct: 0.5, knit: 0.6, wrong: 0.4, stamp: 0.55, acorn: 0.4, unlock: 0.45 };
+const sfxCache = {};
+let sfxLastUnlock = 0;
+function sfx(name, delay) {
+  if (!soundOn || !SFX_VOL[name]) return;
+  if (name === "unlock") { const now = Date.now(); if (now - sfxLastUnlock < 900) return; sfxLastUnlock = now; }
+  setTimeout(() => {
+    try {
+      if (!sfxCache[name]) { sfxCache[name] = new Audio("assets/sfx/" + name + ".mp3"); sfxCache[name].preload = "auto"; }
+      const a = sfxCache[name].cloneNode();
+      a.volume = SFX_VOL[name];
+      const p = a.play();
+      if (p && p.catch) p.catch(() => {});
+    } catch (e) {}
+  }, delay || 0);
+}
+
+/* Background music (its own switch, quiet, loops) */
+const MKEY = "ifrs15-revenue-quest-music";
+let musicOn = false;
+try { musicOn = localStorage.getItem(MKEY) === "on"; } catch (e) {}
+let music = null;
+const MUSIC_VOL = 0.22;
+function startMusic() {
   try {
-    if (voiceNow) voiceNow.pause();
-    voiceNow = new Audio("assets/voice/" + file + ".mp3");
-    voiceNow.volume = 0.9;
-    const p = voiceNow.play();
+    if (!music) { music = new Audio("assets/sfx/music.mp3"); music.loop = true; }
+    music.volume = MUSIC_VOL;
+    const p = music.play();
     if (p && p.catch) p.catch(() => {});
   } catch (e) {}
 }
+function duckMusic(on) { if (music && musicOn) music.volume = on ? 0.07 : MUSIC_VOL; }
+function toggleMusic() {
+  musicOn = !musicOn;
+  try { localStorage.setItem(MKEY, musicOn ? "on" : "off"); } catch (e) {}
+  updateSoundBtn();
+  if (musicOn) startMusic(); else if (music) music.pause();
+}
+/* Phones only allow sound after a tap, so a saved "music on" starts at the first tap. */
+document.addEventListener("pointerdown", function firstTap() {
+  document.removeEventListener("pointerdown", firstTap);
+  if (musicOn && (!music || music.paused)) startMusic();
+}, { once: false });
 function soundIcon(on) {
   return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="none"/>' +
     (on ? '<path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>' : '<path d="M16 9.5l5 5M21 9.5l-5 5"/>') + '</svg>';
 }
+function musicIcon() {
+  return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M9 17.5V6.2l10-2.2v11.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><ellipse cx="6.6" cy="17.6" rx="2.8" ry="2.3"/><ellipse cx="16.6" cy="15.4" rx="2.8" ry="2.3"/></svg>';
+}
 function updateSoundBtn() {
   const b = document.getElementById("sound-btn");
-  b.innerHTML = soundIcon(soundOn) + '<span>Fox voice ' + (soundOn ? "on" : "off") + '</span>';
+  b.innerHTML = soundIcon(soundOn) + '<span>Sound ' + (soundOn ? "on" : "off") + '</span>';
   b.setAttribute("aria-pressed", soundOn ? "true" : "false");
-  b.setAttribute("aria-label", soundOn ? "Turn the fox voice off" : "Turn the fox voice on");
+  b.setAttribute("aria-label", soundOn ? "Turn the fox voice and sound effects off" : "Turn the fox voice and sound effects on");
+  const m = document.getElementById("music-btn");
+  m.innerHTML = musicIcon() + '<span>Music ' + (musicOn ? "on" : "off") + '</span>';
+  m.setAttribute("aria-pressed", musicOn ? "true" : "false");
+  m.setAttribute("aria-label", musicOn ? "Turn the background music off" : "Turn the background music on");
 }
 function toggleSound() {
   soundOn = !soundOn;
   try { localStorage.setItem(SKEY, soundOn ? "on" : "off"); } catch (e) {}
   updateSoundBtn();
-  if (soundOn) speak("correct");
+  if (soundOn) { sfx("correct"); speak("correct", 450); }
   else if (voiceNow) voiceNow.pause();
 }
 
 function showRetry() {
-  speak("wrong");
+  sfx("wrong");
+  speak("wrong", 400);
   const fb = document.getElementById("fb");
   const line = adopted() ? say(pick(TILT_RETRY)) : "Not quite. Have another look?";
   fb.className = "fb retry";
@@ -1721,9 +1783,11 @@ function finish(score, detail, second) {
   S.results.push({ score: score, prompt: q.prompt, scenario: q.scenario });
 
   const cr = compAnswer(q, score, second);
-  if (full) speak(S.streak >= 3 ? (S.streak % 2 ? "streak" : "correct") : "correct");
-  else if (second && score > 0) speak("retry");
-  else if (score === 0 && !S.attempt) speak("wrong");
+  if (score > 0) sfx(q.ot ? "knit" : "correct");
+  else if (!S.attempt) sfx("wrong");
+  if (full) speak(S.streak >= 3 ? (S.streak % 2 ? "streak" : "correct") : "correct", 450);
+  else if (second && score > 0) speak("retry", 450);
+  else if (score === 0 && !S.attempt) speak("wrong", 400);
 
   const cls = full ? "good" : score >= 0.5 ? "mid" : "bad";
   const verdict = full ? (bonus ? "On a roll! Streak bonus" : pick(["Nailed it!", "Spot on!", "Yes, exactly!"])) : second && score > 0 ? "Got it on the second look" : score > 0 ? "Partly right, nice work" : "Not quite, and that's okay";
@@ -1920,7 +1984,8 @@ function renderResults() {
     '</div>';
   scrollTop();
   if (stars === 3) confetti();
-  if (stars >= 1) speak("done");
+  sfx("stamp", 150);
+  if (stars >= 1) { sfx("acorn", 650); speak("done", 1300); }
 }
 
 /* =====================================================================
@@ -2010,6 +2075,7 @@ document.addEventListener("click", e => {
     case "suggest": { const i = document.getElementById("fox-name"); if (i) { i.value = el.dataset.name; i.focus(); } break; }
     case "close-overlay": closeOverlay(); break;
     case "sound": toggleSound(); break;
+    case "music": toggleMusic(); break;
     case "reset":
       if (!resetArmed) { resetArmed = true; el.textContent = "Click again to erase all progress and your fox"; el.classList.add("armed"); }
       else { resetArmed = false; progress = {}; comp = freshComp(); save(); saveComp(); renaming = false; renderHome(); }
