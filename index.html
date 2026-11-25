@@ -1,5 +1,10 @@
 <meta charset="utf-8">
 <title>IFRS 15 Revenue Quest</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icon/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icon/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#FFB627">
+<meta name="apple-mobile-web-app-title" content="Revenue Quest">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1275,8 +1280,13 @@ function compLevel(l, stars) {
   saveComp();
   return text;
 }
+function wishMedia() {
+  const label = nm() + "'s crayon drawing of a kite turns into a real kite that flies into the sky";
+  return '<video class="big-scene wish-video" src="assets/video/wish.mp4" poster="assets/video/wish-poster.webp" playsinline muted preload="auto" ' +
+    (reduced() ? "controls" : "autoplay") + ' aria-label="' + label + '"></video>';
+}
 function wishOverlay() {
-  return '<span class="eyebrow">Step 5 · Recognition</span>' + wishScene() +
+  return '<span class="eyebrow">Step 5 · Recognition</span>' + wishMedia() +
     '<h2>Wish #' + comp.wishes + ' came true!</h2>' +
     '<p>' + nm() + '\'s drawing became a real kite. The wish was drawn (contract), split into parts (performance obligations), saved for (transaction price), shared out (allocation) and finally delivered (recognition).</p>';
 }

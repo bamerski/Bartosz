@@ -1,0 +1,14 @@
+{
+  "name": "IFRS 15 Revenue Quest",
+  "short_name": "Revenue Quest",
+  "description": "Learn IFRS 15 revenue recognition with a fox friend, one case at a time.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EFF5FC",
+  "theme_color": "#FFB627",
+  "icons": [
+    { "src": "assets/icon/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/icon/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
