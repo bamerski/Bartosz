@@ -1,0 +1,921 @@
+<title>IFRS 15 Revenue Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: a game board. Map of six level cards, then one focused question card at a time with a rubber-stamp verdict. */
+:root {
+  --bg: #EDF2F0;
+  --surface: #FFFFFF;
+  --surface-2: #F5F8F7;
+  --ink: #10201D;
+  --muted: #566864;
+  --line: #D2DCD9;
+  --accent: #0B7A66;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #D9EDE7;
+  --gold: #B97A06;
+  --gold-soft: #F7EBD0;
+  --good: #1D8448;
+  --good-soft: #DDF1E4;
+  --bad: #BF3A31;
+  --bad-soft: #F8E1DE;
+  --boss: #10201D;
+  --boss-ink: #EAF3F0;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0C1513; --surface: #14201D; --surface-2: #192825; --ink: #E5EEEB; --muted: #93A7A1;
+    --line: #26362F; --accent: #3CC7A8; --accent-ink: #052019; --accent-soft: #15382F;
+    --gold: #F0B43C; --gold-soft: #3A2D12; --good: #4CC584; --good-soft: #15321F;
+    --bad: #F2766C; --bad-soft: #3B1C19; --boss: #E5EEEB; --boss-ink: #0C1513;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0C1513; --surface: #14201D; --surface-2: #192825; --ink: #E5EEEB; --muted: #93A7A1;
+  --line: #26362F; --accent: #3CC7A8; --accent-ink: #052019; --accent-soft: #15382F;
+  --gold: #F0B43C; --gold-soft: #3A2D12; --good: #4CC584; --good-soft: #15321F;
+  --bad: #F2766C; --bad-soft: #3B1C19; --boss: #E5EEEB; --boss-ink: #0C1513;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; text-wrap: balance; margin: 0; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:disabled { cursor: default; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* top bar */
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-bottom: 20px; }
+.brand { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 0; }
+.brand-mark { width: 34px; height: 34px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: var(--font-mono); font-weight: 600; font-size: 13px; }
+.brand-name { font-family: var(--font-display); font-weight: 800; font-size: 19px; letter-spacing: -.01em; }
+.xp-pill { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px 6px 8px; font-size: 14px; }
+.xp-coin { background: var(--gold-soft); color: var(--gold); border-radius: 999px; padding: 2px 9px; font-family: var(--font-mono); font-weight: 600; font-size: 13px; }
+
+/* hero */
+.hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: stretch; padding-block: 12px 32px; }
+.hero h1 { font-size: clamp(40px, 7vw, 72px); font-weight: 800; letter-spacing: -.035em; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero-copy { display: flex; flex-direction: column; gap: 16px; justify-content: center; }
+.hero-copy p { color: var(--muted); font-size: 18px; max-width: 54ch; }
+.rank-card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.rank-title { font-family: var(--font-display); font-size: 30px; font-weight: 700; }
+.bar { height: 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--gold); border-radius: 999px; transition: width .6s ease; }
+.rank-meta { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.ladder { display: flex; gap: 6px; flex-wrap: wrap; }
+.ladder span { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.ladder span.on { background: var(--accent-soft); color: var(--accent); border-color: transparent; font-weight: 600; }
+
+/* level map */
+.section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.section-head h2 { font-size: 26px; }
+.map { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.lvl { position: relative; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 10px; transition: transform .15s ease, border-color .15s ease; }
+.lvl:hover { transform: translateY(-2px); border-color: var(--accent); }
+.lvl-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.lvl-step { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--accent); }
+.lvl h3 { font-size: 22px; }
+.lvl p { color: var(--muted); font-size: 15px; }
+.lvl-foot { margin-top: auto; padding-top: 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.lvl-go { font-weight: 700; color: var(--accent); font-size: 14px; }
+.lvl.next { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.next-tag { position: absolute; top: -10px; right: 16px; background: var(--accent); color: var(--accent-ink); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; }
+.lvl.boss { background: var(--boss); color: var(--boss-ink); border-color: var(--boss); }
+.lvl.boss p, .lvl.boss .lvl-foot { color: var(--boss-ink); opacity: .75; }
+.lvl.boss .lvl-step, .lvl.boss .lvl-go { color: var(--gold); }
+.stars { display: inline-flex; gap: 3px; }
+.stars svg { width: 18px; height: 18px; }
+.stars.big svg { width: 54px; height: 54px; }
+.star-on { fill: var(--gold); }
+.star-off { fill: var(--line); }
+.lvl.boss .star-off { fill: color-mix(in srgb, var(--boss-ink) 25%, transparent); }
+
+.footnote { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+.footnote p { max-width: 70ch; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--muted); text-decoration: underline; font-size: 13px; }
+.linkbtn.armed { color: var(--bad); font-weight: 700; }
+
+/* level intro + question */
+.stage { max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+.crumbs { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.back { background: none; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-size: 14px; background: var(--surface); }
+.back:hover { border-color: var(--accent); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: clamp(20px, 4vw, 32px); display: flex; flex-direction: column; gap: 18px; position: relative; overflow: hidden; }
+.intro h2 { font-size: clamp(30px, 5vw, 44px); letter-spacing: -.02em; }
+.intro .lead { font-size: 18px; color: var(--muted); max-width: 62ch; }
+.points { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.points li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; padding: 12px 14px; background: var(--surface-2); border-radius: 12px; }
+.ref { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 2px 7px; white-space: nowrap; margin-top: 2px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 12px; padding: 12px 22px; font-weight: 700; font-size: 16px; transition: transform .1s ease, filter .15s ease; }
+.btn:hover { filter: brightness(1.08); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .45; filter: none; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn.ghost:hover { border-color: var(--accent); }
+
+.hud { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.hud .bar { flex: 1 1 160px; }
+.hud .bar > i { background: var(--accent); }
+.streak { font-family: var(--font-mono); font-weight: 600; color: var(--gold); }
+.case { background: var(--surface-2); border-left: 3px solid var(--accent); border-radius: 0 12px 12px 0; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.case p { font-size: 16.5px; }
+.prompt { font-family: var(--font-display); font-size: clamp(20px, 3vw, 24px); font-weight: 700; }
+.opts { display: grid; gap: 10px; }
+.opt { text-align: left; background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 13px 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; transition: border-color .15s ease, background .15s ease; }
+.opt:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+.opt .key { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; margin-top: 2px; }
+.opt.correct { border-color: var(--good); background: var(--good-soft); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.opt:disabled:not(.correct):not(.wrong) { opacity: .6; }
+
+.stamp-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.stamp-btn { border: 3px double var(--line); background: var(--surface); border-radius: 14px; padding: 22px 12px; font-family: var(--font-mono); font-weight: 600; text-transform: uppercase; letter-spacing: .1em; font-size: 15px; transition: transform .15s ease, border-color .15s ease, color .15s ease; }
+.stamp-btn:hover:not(:disabled) { transform: rotate(-2deg) scale(1.02); border-color: var(--accent); color: var(--accent); }
+.stamp-btn.correct { border-color: var(--good); color: var(--good); background: var(--good-soft); }
+.stamp-btn.wrong { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); }
+.stamp-btn:disabled:not(.correct):not(.wrong) { opacity: .5; }
+
+.numrow { display: flex; align-items: stretch; max-width: 360px; border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.numrow:focus-within { border-color: var(--accent); }
+.numrow span { padding: 12px 14px; background: var(--surface-2); color: var(--muted); font-family: var(--font-mono); font-weight: 600; border-right: 1px solid var(--line); }
+.numrow input { flex: 1; min-width: 0; border: 0; padding: 12px 14px; font-family: var(--font-mono); font-size: 18px; background: transparent; color: var(--ink); outline: none; }
+.numrow.correct { border-color: var(--good); }
+.numrow.wrong { border-color: var(--bad); }
+
+.tbl-wrap { overflow-x: auto; }
+.alloc { width: 100%; border-collapse: collapse; min-width: 460px; }
+.alloc th { text-align: left; font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.alloc td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.alloc td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.alloc input { width: 130px; border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 10px; font-family: var(--font-mono); font-size: 15px; background: var(--surface); color: var(--ink); }
+.alloc input:focus { border-color: var(--accent); outline: none; }
+.alloc input.correct { border-color: var(--good); background: var(--good-soft); }
+.alloc input.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.alloc tfoot td { font-weight: 700; border-bottom: 0; }
+.hint { font-size: 14px; color: var(--muted); }
+.split { display: flex; height: 34px; border-radius: 10px; overflow: hidden; gap: 2px; }
+.split div { display: grid; place-items: center; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--accent-ink); background: var(--accent); min-width: 0; overflow: hidden; white-space: nowrap; }
+.split div:nth-child(2) { background: var(--gold); }
+.split div:nth-child(3) { background: var(--muted); color: var(--surface); }
+
+.sort { display: grid; gap: 10px; }
+.sort-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); }
+.sort-row.correct { border-color: var(--good); background: var(--good-soft); }
+.sort-row.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.sort-row .why { grid-column: 1 / -1; font-size: 14px; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface-2); }
+.seg button { border: 0; background: transparent; padding: 7px 12px; font-size: 13.5px; font-weight: 600; white-space: nowrap; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--accent); color: var(--accent-ink); }
+.seg button:disabled { cursor: default; }
+
+.fb { border-top: 1px dashed var(--line); padding-top: 18px; display: flex; flex-direction: column; gap: 12px; position: relative; }
+.fb-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-right: 150px; }
+.verdict { font-family: var(--font-display); font-size: 22px; font-weight: 700; }
+.verdict.good { color: var(--good); }
+.verdict.bad { color: var(--bad); }
+.verdict.mid { color: var(--gold); }
+.xp-gain { font-family: var(--font-mono); font-weight: 600; color: var(--gold); background: var(--gold-soft); padding: 2px 9px; border-radius: 999px; font-size: 14px; }
+.fb .explain { font-size: 16px; max-width: 68ch; }
+.fb .explain b { font-weight: 700; }
+.stamp { position: absolute; top: 4px; right: 0; transform: rotate(-9deg); border: 3px double currentColor; border-radius: 8px; padding: 6px 12px; font-family: var(--font-mono); font-weight: 600; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; animation: thud .35s cubic-bezier(.2, 1.6, .4, 1) both; pointer-events: none; text-align: center; line-height: 1.2; }
+.stamp.good { color: var(--good); }
+.stamp.bad { color: var(--bad); }
+.stamp.mid { color: var(--gold); }
+@keyframes thud { from { transform: rotate(-20deg) scale(1.8); opacity: 0; } to { transform: rotate(-9deg) scale(1); opacity: .92; } }
+
+/* results */
+.results { text-align: center; align-items: center; }
+.results h2 { font-size: clamp(30px, 5vw, 44px); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 520px; }
+.stat { background: var(--surface-2); border-radius: 14px; padding: 14px 8px; display: flex; flex-direction: column; gap: 2px; }
+.stat b { font-family: var(--font-mono); font-size: 24px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13px; color: var(--muted); }
+.review { text-align: left; width: 100%; display: grid; gap: 8px; }
+.review-item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; font-size: 14.5px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); }
+.dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 7px; }
+.dot.good { background: var(--good); }
+.dot.bad { background: var(--bad); }
+.dot.mid { background: var(--gold); }
+.results .actions { justify-content: center; }
+.new-best { color: var(--gold); font-weight: 700; }
+
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+
+@media (max-width: 760px) {
+  .hero { grid-template-columns: minmax(0, 1fr); }
+  .fb-head { padding-right: 0; padding-top: 44px; }
+  .stamp { right: auto; left: 0; top: 14px; }
+}
+@media (max-width: 480px) {
+  .stamp-opts { grid-template-columns: 1fr; }
+  .sort-row { grid-template-columns: minmax(0, 1fr); }
+  .seg { width: 100%; }
+  .seg button { flex: 1; white-space: normal; }
+  .stats b { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .stamp { opacity: .92; }
+}
+</style>
+
+<div class="wrap">
+  <header class="topbar">
+    <button class="brand" data-action="home" aria-label="Back to the level map">
+      <span class="brand-mark">15</span>
+      <span class="brand-name">Revenue Quest</span>
+    </button>
+    <div class="xp-pill"><span class="xp-coin mono" id="xp-total">0 XP</span><span id="rank-small">Trainee</span></div>
+  </header>
+  <main id="view" aria-live="polite"></main>
+</div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+(function () {
+"use strict";
+
+/* ---------- Content ---------- */
+const LEVELS = [
+{
+  id: "contract", step: "Step 1", title: "Identify the contract",
+  blurb: "Spot an enforceable contract with a customer and test it against the five criteria.",
+  lead: "Revenue accounting starts only when there is an enforceable contract with a customer that meets all five criteria in paragraph 9.",
+  points: [
+    ["15.9(a)", "The parties have approved the contract and are committed to perform their obligations."],
+    ["15.9(b–c)", "You can identify each party's rights to the goods or services, and the payment terms."],
+    ["15.9(d)", "The contract has commercial substance: your future cash flows are expected to change."],
+    ["15.9(e)", "It is probable that you will collect the consideration you are entitled to."],
+    ["15.10–12", "Contracts can be written, oral or implied by customary practice. If either side can end a wholly unperformed contract without compensating the other, there is no contract."]
+  ],
+  qs: [
+    { type: "stamp", scenario: "Northwind Fitness sends a signed purchase order for 20 treadmills at CU 3,000 each, payable 30 days after delivery. You accept it. Northwind has paid every invoice on time for six years.",
+      prompt: "Is there a contract under IFRS 15?", options: ["Contract exists", "No contract yet"], answer: 0,
+      explain: "All five criteria are met: both parties approved and are committed, rights and <b>payment terms</b> are clear, the deal has commercial substance, and collection is <b>probable</b> given the customer's record." },
+    { type: "stamp", scenario: "You agree by phone to supply a regular customer with 500 kg of coffee beans next week at your list price. Phone orders are how you have always traded with this customer, and both sides treat them as binding.",
+      prompt: "Is there a contract under IFRS 15?", options: ["Contract exists", "No contract yet"], answer: 0,
+      explain: "A contract doesn't need to be written. It can be <b>oral or implied by customary business practice</b> (15.10), as long as it creates enforceable rights and obligations." },
+    { type: "stamp", scenario: "A developer sells a building for CU 1,000,000 to a customer who plans to open a restaurant there, in an area with heavy competition. The customer pays a 5% deposit and signs a non-recourse loan for the rest, to be repaid from restaurant profits. The customer has no other assets or income.",
+      prompt: "Is there a contract under IFRS 15?", options: ["Contract exists", "No contract yet"], answer: 1,
+      explain: "Collection is <b>not probable</b> (15.9(e)): repayment depends entirely on a risky new business, and the loan is non-recourse. The deposit is held as a liability until the criteria are met or one of the events in 15.15 occurs. This mirrors Illustrative Example 1." },
+    { type: "stamp", scenario: "Two retailers agree to swap identical stock of the same value, stored at the same location. Neither company's future cash flows change as a result.",
+      prompt: "Is there a contract under IFRS 15?", options: ["Contract exists", "No contract yet"], answer: 1,
+      explain: "The exchange lacks <b>commercial substance</b> (15.9(d)). Swaps of this kind between entities in the same line of business, made to facilitate sales to customers, are also outside the scope of IFRS 15 (15.5(d))." },
+    { type: "stamp", scenario: "A software house and a client sign a three-year support agreement. No work has started and nothing has been paid. Either side can cancel at any time before work starts without paying the other anything.",
+      prompt: "Is there a contract under IFRS 15?", options: ["Contract exists", "No contract yet"], answer: 1,
+      explain: "The contract is <b>wholly unperformed</b> and each party can terminate it without compensating the other, so no contract exists for IFRS 15 purposes (15.12)." },
+    { type: "choice", scenario: "On 1 March you accept an order that meets all five criteria and start delivering. On 15 March you learn the customer has gone into administration and is unlikely to pay for future deliveries.",
+      prompt: "What does IFRS 15 require?",
+      options: [
+        "Reverse all revenue recognised since 1 March",
+        "Nothing: the criteria are assessed only at contract inception",
+        "Reassess the criteria, because there has been a significant change in facts and circumstances",
+        "Restate the prior year's financial statements"
+      ], answer: 2,
+      explain: "Once the criteria are met you don't reassess them <b>unless there is a significant change in facts and circumstances</b> (15.13). Here there is, so you reassess for the remaining goods. Revenue already recognised stays; any impairment of the receivable is dealt with under IFRS 9." }
+  ]
+},
+{
+  id: "po", step: "Step 2", title: "Identify performance obligations",
+  blurb: "Unbundle the contract: which promises are distinct, and which belong together?",
+  lead: "A performance obligation is a promise to transfer a distinct good or service, or a series of substantially the same distinct goods or services with the same pattern of transfer.",
+  points: [
+    ["15.27(a)", "Capable of being distinct: the customer can benefit from it on its own or with resources that are readily available."],
+    ["15.27(b)", "Distinct in the context of the contract: the promise is separately identifiable from the other promises."],
+    ["15.29", "Not separately identifiable if you provide a significant integration service, if it significantly modifies or customises another item, or if the items are highly interdependent."],
+    ["15.22(b)", "A series of distinct, substantially similar services (like daily cleaning) is one performance obligation."],
+    ["B28–B33", "An assurance-type warranty is not a performance obligation. A service-type warranty, or one sold separately, is."]
+  ],
+  qs: [
+    { type: "choice", scenario: "A software developer sells a software licence, standard installation (other firms routinely do it), two years of technical support and two years of unspecified updates. The software works without the updates.",
+      prompt: "How many performance obligations are there?", options: ["1", "2", "3", "4"], answer: 3,
+      explain: "<b>Four</b>: licence, installation, support and updates. Each is capable of being distinct, and the installation doesn't significantly modify the software, so each is separately identifiable. This is Illustrative Example 11, Case A." },
+    { type: "choice", scenario: "Same deal, except the installation involves significant customisation of the software, adding new functionality so it can work with the customer's other systems.",
+      prompt: "How many performance obligations are there now?", options: ["1", "2", "3", "4"], answer: 2,
+      explain: "<b>Three</b>. The licence and the customised installation are combined, because the installation significantly modifies the software (15.29(b)). Support and updates remain separate. This is Example 11, Case B." },
+    { type: "choice", scenario: "A contractor agrees to build a hospital. The contract covers project management, engineering, site clearance, foundations, procurement, construction and finishing. The contractor integrates all of these to deliver the finished building.",
+      prompt: "How many performance obligations are there?", options: ["1", "4", "7", "One per invoice milestone"], answer: 0,
+      explain: "<b>One</b>. Each item might be capable of being distinct, but the contractor provides a <b>significant integration service</b> that combines them into the hospital the customer contracted for (15.29(a)). This is Example 10, Case A." },
+    { type: "sort", prompt: "A washing machine maker sells to a household. Sort each promise.", bins: ["Separate PO", "Not a PO"],
+      items: [
+        { text: "The washing machine itself", bin: 0, why: "The main distinct good the customer is buying." },
+        { text: "Standard 12-month warranty that the machine works as specified", bin: 1, why: "Assurance-type warranty: accounted for under IAS 37, not a performance obligation (B30)." },
+        { text: "Optional 3-year extended warranty, sold for CU 90", bin: 0, why: "Sold separately, so it is a service-type warranty and a separate performance obligation (B29)." },
+        { text: "A voucher for 30% off the next purchase, not offered to other customers", bin: 0, why: "A material right the customer wouldn't get otherwise, so it is a separate performance obligation (B40)." },
+        { text: "Loading the machine onto your own delivery van before the customer takes control", bin: 1, why: "A fulfilment activity that doesn't transfer anything to the customer (15.25)." }
+      ],
+      explain: "Look for promises that transfer something to the customer. Warranties that only assure the product works, and your own set-up activities, aren't performance obligations." },
+    { type: "choice", scenario: "A cleaning company signs a one-year contract to clean an office every night.",
+      prompt: "How are the nightly cleans treated?",
+      options: [
+        "As 365 separate performance obligations, each priced on its own",
+        "As one performance obligation: a series of distinct, substantially similar services transferred over time",
+        "As one performance obligation recognised when the year ends",
+        "As a lease of the cleaning staff"
+      ], answer: 1,
+      explain: "Each night's clean is distinct, but they are substantially the same and transfer over time in the same way, so the <b>series guidance</b> in 15.22(b) and 15.23 treats them as a single performance obligation." }
+  ]
+},
+{
+  id: "price", step: "Step 3", title: "Determine the transaction price",
+  blurb: "Estimate variable consideration, apply the constraint and adjust for financing.",
+  lead: "The transaction price is the consideration you expect to be entitled to for transferring the goods or services. It excludes amounts collected for third parties, such as sales taxes.",
+  points: [
+    ["15.53", "Estimate variable consideration with the expected value (many possible outcomes) or the most likely amount (two possible outcomes)."],
+    ["15.56", "Constraint: include variable consideration only to the extent it is highly probable that a significant revenue reversal won't occur."],
+    ["15.60–63", "Adjust for a significant financing component. Practical expedient: no adjustment if payment and transfer are one year or less apart."],
+    ["15.66", "Measure non-cash consideration at fair value."],
+    ["15.70", "Consideration payable to a customer reduces the price, unless it pays for a distinct good or service from the customer."]
+  ],
+  qs: [
+    { type: "choice", scenario: "Bayside Builders will receive CU 2,000,000 to build a warehouse, plus a CU 150,000 bonus if it finishes by 30 June. It either earns the full bonus or nothing.",
+      prompt: "Which method best predicts the variable amount?",
+      options: ["Expected value", "Most likely amount", "Ignore the bonus until the cash arrives", "Fair value of the warehouse"], answer: 1,
+      explain: "With only <b>two possible outcomes</b>, the most likely amount gives the better prediction (15.53(b)). Expected value would produce CU 127,500 or similar, an amount Bayside can't actually receive." },
+    { type: "number", scenario: "Bayside estimates an 85% chance of finishing on time. The constraint doesn't limit the estimate.",
+      prompt: "What transaction price should Bayside use?", answer: 2150000,
+      explain: "Most likely outcome is that Bayside earns the bonus: CU 2,000,000 + CU 150,000 = <b>CU 2,150,000</b>. Bayside updates this estimate at each reporting date (15.59)." },
+    { type: "number", scenario: "A consultant earns a fixed fee of CU 400,000 plus a fee linked to the cost savings it delivers. Its estimates: CU 0 (25% likely), CU 60,000 (45%) or CU 100,000 (30%). It has many similar contracts, so expected value is appropriate, and the constraint doesn't limit the estimate.",
+      prompt: "What is the transaction price?", answer: 457000,
+      explain: "Expected value = 0 × 25% + 60,000 × 45% + 100,000 × 30% = 27,000 + 30,000 = CU 57,000. Add the fixed fee: <b>CU 457,000</b>." },
+    { type: "choice", scenario: "An asset manager earns 20% of the fund's return above a benchmark, measured on 31 December. It is now January and the return depends on market performance.",
+      prompt: "How much of the performance fee goes into the transaction price now?",
+      options: [
+        "The full expected fee, based on last year's return",
+        "Half the expected fee, as a prudent middle ground",
+        "None yet: the fee is highly susceptible to market factors outside the manager's control",
+        "The maximum possible fee"
+      ], answer: 2,
+      explain: "The <b>constraint</b> applies. Market-driven fees are highly susceptible to factors outside the entity's influence (15.57(a)), so the fee is included only when it is highly probable there will be no significant reversal, usually when the uncertainty resolves. See Illustrative Example 25." },
+    { type: "choice", scenario: "A customer pays CU 10,000 upfront for equipment that you deliver in three months.",
+      prompt: "Do you adjust the price for a financing component?",
+      options: [
+        "Yes, discount the CU 10,000 using the customer's borrowing rate",
+        "No: payment and transfer are one year or less apart, so the practical expedient applies",
+        "Yes, always, when cash is received in advance",
+        "No: advance payments are never financing"
+      ], answer: 1,
+      explain: "Under the <b>practical expedient</b> in 15.63, you don't need to adjust for the time value of money if you expect the gap between payment and transfer to be one year or less." },
+    { type: "number", scenario: "You sell 100 units at CU 50 each to a retailer. You also pay the retailer a CU 600 'slotting fee' to stock the product, and you receive nothing distinct in return.",
+      prompt: "What is the transaction price?", answer: 4400,
+      explain: "Consideration payable to a customer that isn't for a distinct good or service <b>reduces the transaction price</b> (15.70): CU 5,000 − CU 600 = <b>CU 4,400</b>." }
+  ]
+},
+{
+  id: "allocate", step: "Step 4", title: "Allocate the transaction price",
+  blurb: "Split the price across obligations using stand-alone selling prices.",
+  lead: "Allocate the transaction price to each performance obligation in proportion to its stand-alone selling price (SSP), the price you would charge for it on its own.",
+  points: [
+    ["15.76–77", "Use relative SSPs. The best evidence is an observable price when you sell the item separately."],
+    ["15.79", "If the SSP isn't observable, estimate it: adjusted market assessment, expected cost plus a margin, or the residual approach (only when the SSP is highly variable or uncertain)."],
+    ["15.81–82", "Allocate a discount proportionally to all obligations, unless observable evidence shows it relates to only some of them."],
+    ["15.85", "Variable consideration can go entirely to one obligation when it relates specifically to it and the result meets the allocation objective."]
+  ],
+  qs: [
+    { type: "alloc", scenario: "TechHub sells a home-office bundle for CU 1,200: a laptop, a printer and a setup service.",
+      prompt: "Allocate the CU 1,200 transaction price.", price: 1200,
+      items: [{ name: "Laptop", ssp: 1000 }, { name: "Printer", ssp: 300 }, { name: "Setup service", ssp: 200 }],
+      explain: "Total SSP is CU 1,500, so each item gets 1,200 ÷ 1,500 = <b>80%</b> of its SSP. The CU 300 discount is shared proportionally (15.81)." },
+    { type: "alloc", scenario: "A mobile carrier sells a phone bundled with a 24-month airtime plan for CU 1,500 in total. The phone sells on its own for CU 600, and the plan alone costs CU 50 a month.",
+      prompt: "Allocate the CU 1,500 transaction price.", price: 1500,
+      items: [{ name: "Phone (delivered day 1)", ssp: 600 }, { name: "24-month plan", ssp: 1200 }],
+      explain: "Total SSP is CU 1,800 (600 + 24 × 50). Phone: 1,500 × 600 ÷ 1,800 = CU 500, recognised when the phone is handed over. Plan: CU 1,000, recognised over 24 months. More revenue comes up front than the cash pattern suggests, creating a <b>contract asset</b>." },
+    { type: "choice", scenario: "A company sells products A, B and C together for CU 100. SSPs: A CU 40, B CU 55, C CU 45 (total CU 140). It regularly sells B and C together for CU 60, and A on its own for CU 40.",
+      prompt: "How should the CU 40 discount be allocated?",
+      options: [
+        "Proportionally: A 28.6, B 39.3, C 32.1",
+        "Entirely to B and C: A 40, B 33, C 27",
+        "Entirely to A: A 0, B 55, C 45",
+        "Equally: A 26.7, B 41.7, C 31.7"
+      ], answer: 1,
+      explain: "Observable evidence shows the whole discount relates to B and C (15.82), so A keeps its SSP of CU 40 and B and C share CU 60 in proportion to their SSPs: B 60 × 55/100 = 33, C 60 × 45/100 = 27. See Illustrative Example 34, Case A." },
+    { type: "number", scenario: "A maintenance service has never been sold separately. It costs CU 800 to deliver, and the company's normal margin on similar services is 25% of cost.",
+      prompt: "Using expected cost plus a margin, what is the estimated SSP?", answer: 1000,
+      explain: "CU 800 + 25% × 800 = <b>CU 1,000</b>. Expected cost plus a margin is one of the estimation methods in 15.79(b)." },
+    { type: "choice", scenario: "A software firm sells a new analytics module bundled with established products. It has never sold the module alone, and prices for it vary widely from customer to customer.",
+      prompt: "Which approach can it use to estimate the module's SSP?",
+      options: [
+        "Allocate nothing to the module",
+        "Use the module's development cost, with no margin",
+        "The residual approach: total price minus the observable SSPs of the other products",
+        "Allocate the whole bundle discount to the module"
+      ], answer: 2,
+      explain: "The <b>residual approach</b> is allowed only when the SSP is highly variable or uncertain (15.79(c)). A new product with no established price and widely varying prices fits that description." }
+  ]
+},
+{
+  id: "timing", step: "Step 5", title: "Recognise revenue",
+  blurb: "Decide whether control transfers over time or at a point in time, and measure progress.",
+  lead: "Recognise revenue when, or as, the customer obtains control: the ability to direct the asset's use and obtain substantially all of its remaining benefits.",
+  points: [
+    ["15.35(a)", "Over time if the customer receives and consumes the benefits as you perform, as with most services."],
+    ["15.35(b)", "Over time if your work creates or enhances an asset that the customer controls as it is built."],
+    ["15.35(c)", "Over time if the asset has no alternative use to you and you have an enforceable right to payment for work done to date."],
+    ["15.38", "Otherwise at a point in time. Indicators: present right to payment, legal title, physical possession, risks and rewards, customer acceptance."],
+    ["15.39–45", "For revenue over time, measure progress with an output method (such as milestones) or an input method (such as costs incurred)."]
+  ],
+  qs: [
+    { type: "sort", prompt: "Over time or at a point in time?", bins: ["Over time", "Point in time"],
+      items: [
+        { text: "Monthly payroll processing for a client", bin: 0, why: "The client receives and consumes the benefit as each payroll is processed (15.35(a))." },
+        { text: "Selling a laptop in a shop", bin: 1, why: "Control passes when the customer pays and walks out with it." },
+        { text: "Renovating the customer's own office building", bin: 0, why: "The work enhances an asset the customer already controls (15.35(b))." },
+        { text: "Building a specialised machine with no other use; if the customer cancels, you're owed cost plus margin for work to date", bin: 0, why: "No alternative use plus an enforceable right to payment for performance to date (15.35(c))." },
+        { text: "Building the same machine, but you're paid only once it's delivered", bin: 1, why: "No enforceable right to payment for work to date, so 15.35(c) fails. Revenue is recognised on delivery." },
+        { text: "A 12-month gym membership", bin: 0, why: "The member benefits from access throughout the year as you stand ready (15.35(a))." }
+      ],
+      explain: "Run through the three over-time criteria in 15.35. If none applies, revenue is recognised at the point control transfers." },
+    { type: "choice", scenario: "Goods leave your warehouse on 28 December and arrive at the customer on 3 January. Title and risk pass on arrival, and the customer pays 30 days after arrival. Your year ends 31 December.",
+      prompt: "When do you recognise the revenue?",
+      options: ["28 December, when the goods ship", "31 December, at year end", "3 January, when the goods arrive", "2 February, when the cash is received"], answer: 2,
+      explain: "Control transfers on <b>arrival</b>: that's when the customer gets title, possession and the risks and rewards (15.38). The revenue belongs to the new financial year." },
+    { type: "number", scenario: "A contractor has a CU 5,000,000 fixed-price contract recognised over time. Expected total costs are CU 4,000,000. Costs incurred to date are CU 1,000,000 and reflect the progress made.",
+      prompt: "Using the cost-to-cost input method, how much revenue has been earned to date?", answer: 1250000,
+      explain: "Progress = 1,000,000 ÷ 4,000,000 = 25%. Revenue = 25% × 5,000,000 = <b>CU 1,250,000</b> (15.41, B18–B19)." },
+    { type: "choice", prompt: "Which of these is NOT an indicator that control has transferred at a point in time (15.38)?",
+      options: ["The customer has legal title", "The customer has physical possession", "You have received the customer's purchase order", "The customer has accepted the asset"], answer: 2,
+      explain: "Receiving an order shows there's a contract, not that control has passed. The 15.38 indicators are a present right to payment, legal title, physical possession, the significant risks and rewards of ownership, and customer acceptance." },
+    { type: "choice", scenario: "A customer asks you to keep finished goods in your warehouse until it has space for them. This is a bill-and-hold arrangement.",
+      prompt: "Which is one of the conditions for recognising revenue before shipment (B81)?",
+      options: [
+        "The customer must have paid in full",
+        "The reason for the arrangement must be substantive, for example because the customer requested it",
+        "You must be able to use the goods to fill other customers' orders",
+        "The goods must be insured by the customer"
+      ], answer: 1,
+      explain: "B81 requires a <b>substantive reason</b>, the goods to be identified separately as the customer's, ready for transfer, and unavailable for you to use or redirect to another customer." }
+  ]
+},
+{
+  id: "boss", step: "Final level", title: "Year-end close", boss: true,
+  blurb: "Mixed cases from across IFRS 15: agents, loyalty points, returns, licences and more.",
+  lead: "Your auditors arrive tomorrow. Work through eight tricky items using everything from the five steps, plus some application guidance.",
+  points: [
+    ["B34–B38", "Principal or agent: do you control the good or service before it reaches the customer?"],
+    ["B20–B27", "Sales with a right of return: revenue for what you expect to keep, a refund liability for the rest."],
+    ["B52–B63", "Licences: a right to access IP is recognised over time; a right to use IP at a point in time."],
+    ["15.91–94", "Incremental costs of obtaining a contract are capitalised if you expect to recover them."]
+  ],
+  qs: [
+    { type: "choice", scenario: "An online travel site lists hotel rooms at CU 200 a night. It never controls the rooms, the hotel sets the terms, and the site keeps a CU 30 commission per booking.",
+      prompt: "How much revenue does the site recognise per booking?", options: ["CU 200", "CU 170", "CU 30", "Nothing"], answer: 2,
+      explain: "The site doesn't control the rooms before they pass to the guest, so it is an <b>agent</b> and recognises only its commission of CU 30 (B35B, B36)." },
+    { type: "choice", scenario: "A coffee chain gives one loyalty point for every CU 1 spent. Points can be exchanged for free coffee.",
+      prompt: "How are the points accounted for?",
+      options: [
+        "As a marketing expense when the points are issued",
+        "As a separate performance obligation: part of each sale's price is deferred until points are redeemed or expire",
+        "Ignored until a customer redeems them",
+        "As a provision under IAS 37"
+      ], answer: 1,
+      explain: "The points give the customer a <b>material right</b> (B40), so part of the transaction price is allocated to them based on relative SSPs and recognised when they're redeemed or expire. See Illustrative Example 52." },
+    { type: "number", scenario: "You sell 100 kettles at CU 50 each with a 30-day right of return. You expect 5 to come back, and it's highly probable that estimate won't produce a significant reversal.",
+      prompt: "How much revenue do you recognise at the time of sale?", answer: 4750,
+      explain: "Revenue for the 95 kettles you expect to keep: 95 × 50 = <b>CU 4,750</b>. You record a refund liability of CU 250 and an asset for the right to recover the returned kettles (B21)." },
+    { type: "choice", scenario: "A franchisor grants a 10-year licence to use its brand. Franchisees expect it to keep running ad campaigns and refreshing the brand, activities that significantly affect the brand's value.",
+      prompt: "How is the licence revenue recognised?",
+      options: ["At a point in time, when the licence starts", "Over time, as a right to access the IP", "Only when franchisees make sales", "Over time, as a lease"], answer: 1,
+      explain: "The franchisor's ongoing activities significantly affect the IP, so the licence is a <b>right to access</b> it, recognised over time (B58). Sales-based royalties follow the exception in B63." },
+    { type: "choice", scenario: "A gym charges a non-refundable CU 120 joining fee plus CU 40 a month. Joining gives the member no separate service.",
+      prompt: "When is the CU 120 recognised?",
+      options: [
+        "All of it at sign-up, because it's non-refundable",
+        "Over the period the related membership services are provided",
+        "Only when the member leaves",
+        "Never: it reduces the monthly fee"
+      ], answer: 1,
+      explain: "The fee doesn't transfer anything on its own. It is an <b>advance payment for future services</b> and is recognised as those services are provided (B49)." },
+    { type: "choice", scenario: "A sales rep earns a CU 9,000 commission for winning a three-year service contract. The commission is paid only because the contract was signed.",
+      prompt: "How do you account for the commission?",
+      options: [
+        "Expense it immediately",
+        "Capitalise it and amortise it over the three-year contract",
+        "Deduct it from revenue",
+        "Capitalise it and never amortise it"
+      ], answer: 1,
+      explain: "It's an <b>incremental cost of obtaining a contract</b> that you expect to recover, so you capitalise it (15.91) and amortise it in line with the services (15.99). Expensing it is allowed only if the amortisation period would be one year or less (15.94)." },
+    { type: "choice", scenario: "Partway through a contract for 120 units at CU 100 each, the customer orders 30 more distinct units at CU 95. CU 95 is their current stand-alone selling price.",
+      prompt: "How is the modification accounted for?",
+      options: [
+        "As a separate contract",
+        "By adjusting cumulative revenue on the original contract",
+        "By spreading the CU 5 discount over all 150 units",
+        "It isn't recognised until the original contract finishes"
+      ], answer: 0,
+      explain: "The added units are distinct and priced at their SSP, so the modification is a <b>separate contract</b> (15.20). The original contract carries on unchanged." },
+    { type: "choice", scenario: "You've delivered goods worth CU 500, but under the contract you can bill only after you deliver a second item next month.",
+      prompt: "What do you record for the CU 500?", options: ["A trade receivable", "A contract asset", "A contract liability", "Nothing until you invoice"], answer: 1,
+      explain: "Your right to the consideration depends on something other than the passage of time, namely the second delivery, so it is a <b>contract asset</b> (15.107). It becomes a receivable once the right is unconditional (15.108)." }
+  ]
+}
+];
+
+const RANKS = [
+  { name: "Trainee", xp: 0 },
+  { name: "Staff accountant", xp: 600 },
+  { name: "Senior", xp: 1500 },
+  { name: "Manager", xp: 2600 },
+  { name: "Partner", xp: 3700 }
+];
+
+/* ---------- Storage ---------- */
+const KEY = "ifrs15-revenue-quest-v1";
+function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(progress)); } catch (e) {} }
+let progress = load();
+
+/* ---------- State ---------- */
+const view = document.getElementById("view");
+let S = null; // current run
+let resetArmed = false;
+
+const fmt = n => "CU " + Math.round(n).toLocaleString("en-US");
+const totalXp = () => LEVELS.reduce((a, l) => a + ((progress[l.id] && progress[l.id].xp) || 0), 0);
+function rankFor(xp) {
+  let i = 0;
+  RANKS.forEach((r, k) => { if (xp >= r.xp) i = k; });
+  return i;
+}
+function starsFor(pct) { return pct >= 0.9 ? 3 : pct >= 0.7 ? 2 : pct >= 0.4 ? 1 : 0; }
+function starSvg(on) {
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="' + (on ? "star-on" : "star-off") + '" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.5L12 17.3l-5.9 3.2 1.3-6.5L2.5 9.4l6.6-.8z"/></svg>';
+}
+function starsRow(n, big) {
+  let h = '<span class="stars' + (big ? " big" : "") + '" role="img" aria-label="' + n + ' of 3 stars">';
+  for (let i = 0; i < 3; i++) h += starSvg(i < n);
+  return h + "</span>";
+}
+function updateTopbar() {
+  const xp = totalXp();
+  document.getElementById("xp-total").textContent = xp.toLocaleString("en-US") + " XP";
+  document.getElementById("rank-small").textContent = RANKS[rankFor(xp)].name;
+}
+function scrollTop() { window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" }); }
+
+/* ---------- Home ---------- */
+function renderHome() {
+  S = null;
+  const xp = totalXp();
+  const ri = rankFor(xp);
+  const next = RANKS[ri + 1];
+  const pct = next ? (xp - RANKS[ri].xp) / (next.xp - RANKS[ri].xp) : 1;
+  const nextIdx = LEVELS.findIndex(l => !progress[l.id]);
+
+  let cards = "";
+  LEVELS.forEach((l, i) => {
+    const p = progress[l.id];
+    const isNext = i === nextIdx;
+    cards += '<button class="lvl' + (l.boss ? " boss" : "") + (isNext ? " next" : "") + '" data-action="intro" data-level="' + i + '">' +
+      (isNext ? '<span class="next-tag">Up next</span>' : "") +
+      '<div class="lvl-top"><span class="lvl-step">' + l.step + '</span>' + starsRow(p ? p.stars : 0) + '</div>' +
+      '<h3>' + l.title + '</h3><p>' + l.blurb + '</p>' +
+      '<div class="lvl-foot"><span class="mono">' + l.qs.length + ' cases' + (p ? " · best " + p.xp + " XP" : "") + '</span>' +
+      '<span class="lvl-go">' + (p ? "Replay" : "Play") + ' →</span></div></button>';
+  });
+
+  view.innerHTML =
+    '<section class="hero">' +
+      '<div class="hero-copy">' +
+        '<span class="eyebrow">IFRS 15 · Revenue from Contracts with Customers</span>' +
+        '<h1>Five steps.<br>Every <em>contract.</em></h1>' +
+        '<p>Learn revenue recognition by playing through the five-step model. Each level teaches one step, then tests it on real-world cases. Earn XP, collect stars and work your way up to partner.</p>' +
+        '<div class="actions"><button class="btn" data-action="intro" data-level="' + (nextIdx === -1 ? 5 : nextIdx) + '">' + (nextIdx === -1 ? "Replay the final level" : nextIdx === 0 ? "Start with Step 1" : "Continue: " + LEVELS[nextIdx].step) + '</button></div>' +
+      '</div>' +
+      '<aside class="rank-card" aria-label="Your rank">' +
+        '<span class="eyebrow">Your rank</span>' +
+        '<div class="rank-title">' + RANKS[ri].name + '</div>' +
+        '<div class="bar"><i style="width:' + Math.round(pct * 100) + '%"></i></div>' +
+        '<div class="rank-meta"><span class="mono">' + xp.toLocaleString("en-US") + ' XP</span><span>' + (next ? (next.xp - xp).toLocaleString("en-US") + " XP to " + next.name : "Top rank reached") + '</span></div>' +
+        '<div class="ladder">' + RANKS.map((r, k) => '<span class="' + (k <= ri ? "on" : "") + '">' + r.name + '</span>').join("") + '</div>' +
+      '</aside>' +
+    '</section>' +
+    '<section>' +
+      '<div class="section-head"><h2>The five-step model</h2><span class="hint">Your best score per level counts toward your rank.</span></div>' +
+      '<div class="map">' + cards + '</div>' +
+    '</section>' +
+    '<footer class="footnote"><p>Paragraph references are to IFRS 15 and its application guidance (B paragraphs) and illustrative examples. CU means currency units. This game is a learning aid; check the standard for authoritative wording.</p>' +
+      '<button class="linkbtn" data-action="reset">Reset progress</button></footer>';
+  updateTopbar();
+}
+
+/* ---------- Level intro ---------- */
+function renderIntro(li) {
+  const l = LEVELS[li];
+  S = { li: li };
+  view.innerHTML =
+    '<div class="stage">' +
+      '<div class="crumbs"><button class="back" data-action="home">← Level map</button><span class="eyebrow">' + l.step + ' · ' + l.qs.length + ' cases</span></div>' +
+      '<article class="card intro">' +
+        '<span class="eyebrow">Briefing</span>' +
+        '<h2>' + l.title + '</h2>' +
+        '<p class="lead">' + l.lead + '</p>' +
+        '<ul class="points">' + l.points.map(p => '<li><span class="ref">' + p[0] + '</span><span>' + p[1] + '</span></li>').join("") + '</ul>' +
+        '<div class="actions"><button class="btn" data-action="start">Start level</button><span class="hint">100 XP per correct answer, plus a streak bonus.</span></div>' +
+      '</article>' +
+    '</div>';
+  scrollTop();
+  const b = view.querySelector('[data-action="start"]'); if (b) b.focus({ preventScroll: true });
+}
+
+/* ---------- Questions ---------- */
+function startLevel(li) {
+  S = { li: li, qi: 0, results: [], xp: 0, streak: 0, done: false, picks: [] };
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const l = LEVELS[S.li];
+  const q = l.qs[S.qi];
+  S.done = false;
+  S.picks = q.type === "sort" ? q.items.map(() => -1) : [];
+  const keys = "ABCD";
+  let body = "";
+  if (q.scenario) body += '<div class="case"><span class="eyebrow">Case</span><p>' + q.scenario + '</p></div>';
+  body += '<p class="prompt">' + q.prompt + '</p>';
+
+  if (q.type === "choice") {
+    body += '<div class="opts">' + q.options.map((o, i) =>
+      '<button class="opt" data-action="pick" data-i="' + i + '"><span class="key">' + keys[i] + '</span><span>' + o + '</span></button>').join("") + '</div>';
+  } else if (q.type === "stamp") {
+    body += '<div class="stamp-opts">' + q.options.map((o, i) =>
+      '<button class="stamp-btn" data-action="pick" data-i="' + i + '">' + o + '</button>').join("") + '</div>';
+  } else if (q.type === "number") {
+    body += '<div class="actions"><label class="numrow" for="num-input"><span>CU</span><input id="num-input" inputmode="decimal" autocomplete="off" placeholder="e.g. 1,000,000" aria-label="Your answer in currency units"></label>' +
+      '<button class="btn" data-action="check-num">Check</button></div>';
+  } else if (q.type === "alloc") {
+    const tot = q.items.reduce((a, it) => a + it.ssp, 0);
+    body += '<div class="tbl-wrap"><table class="alloc"><thead><tr><th>Obligation</th><th>SSP</th><th>Your allocation</th></tr></thead><tbody>' +
+      q.items.map((it, i) => '<tr><td>' + it.name + '</td><td class="num">' + fmt(it.ssp) + '</td><td><input id="alloc-' + i + '" inputmode="decimal" autocomplete="off" aria-label="Allocation to ' + it.name + '"></td></tr>').join("") +
+      '</tbody><tfoot><tr><td>Total</td><td class="num">' + fmt(tot) + '</td><td class="num">' + fmt(q.price) + '</td></tr></tfoot></table></div>' +
+      '<p class="hint">Allocation = transaction price × item SSP ÷ total SSP. Round to whole CU.</p>' +
+      '<div class="actions"><button class="btn" data-action="check-alloc">Check allocation</button></div>';
+  } else if (q.type === "sort") {
+    body += '<div class="sort">' + q.items.map((it, i) =>
+      '<div class="sort-row" id="sort-' + i + '"><span>' + it.text + '</span><span class="seg" role="group" aria-label="Classify">' +
+      q.bins.map((b, k) => '<button data-action="sort" data-item="' + i + '" data-bin="' + k + '" aria-pressed="false">' + b + '</button>').join("") +
+      '</span></div>').join("") + '</div>' +
+      '<div class="actions"><button class="btn" data-action="check-sort" disabled>Check answers</button><span class="hint" id="sort-left">' + q.items.length + ' left to sort</span></div>';
+  }
+
+  const progressPct = Math.round((S.qi / l.qs.length) * 100);
+  view.innerHTML =
+    '<div class="stage">' +
+      '<div class="crumbs"><button class="back" data-action="home">← Level map</button><span class="eyebrow">' + l.step + ' · ' + l.title + '</span></div>' +
+      '<div class="hud"><span class="mono">' + (S.qi + 1) + ' / ' + l.qs.length + '</span><div class="bar"><i style="width:' + progressPct + '%"></i></div>' +
+        '<span class="mono">' + S.xp + ' XP</span>' + (S.streak >= 2 ? '<span class="streak">Streak ×' + S.streak + '</span>' : "") + '</div>' +
+      '<article class="card" id="qcard">' + body + '<div id="fb"></div></article>' +
+    '</div>';
+  scrollTop();
+  const first = view.querySelector("#num-input, #alloc-0");
+  if (first) first.focus({ preventScroll: true });
+}
+
+function parseNum(v) {
+  const s = String(v || "").replace(/[^0-9.\-]/g, "");
+  if (s === "" || s === "-" || s === ".") return NaN;
+  return parseFloat(s);
+}
+
+function finish(score, detail) {
+  if (S.done) return;
+  S.done = true;
+  const l = LEVELS[S.li];
+  const q = l.qs[S.qi];
+  const full = score >= 0.999;
+  const bonus = full ? Math.min(S.streak, 5) * 20 : 0;
+  const gained = Math.round(100 * score) + bonus;
+  S.xp += gained;
+  S.streak = full ? S.streak + 1 : 0;
+  S.results.push({ score: score, prompt: q.prompt, scenario: q.scenario });
+
+  const cls = full ? "good" : score >= 0.5 ? "mid" : "bad";
+  const verdict = full ? (bonus ? "Correct, streak bonus!" : "Correct") : score > 0 ? "Partly right" : "Not quite";
+  const stamp = full ? "Recognised" : score > 0 ? "Partly<br>recognised" : "Reversal";
+  const last = S.qi === l.qs.length - 1;
+
+  const fb = document.getElementById("fb");
+  fb.className = "fb";
+  fb.innerHTML =
+    '<div class="stamp ' + cls + '" aria-hidden="true">' + stamp + '</div>' +
+    '<div class="fb-head"><span class="verdict ' + cls + '">' + verdict + '</span><span class="xp-gain">+' + gained + ' XP</span></div>' +
+    (detail ? '<p class="explain">' + detail + '</p>' : "") +
+    '<p class="explain">' + q.explain + '</p>' +
+    '<div class="actions"><button class="btn" data-action="next">' + (last ? "See results" : "Next case →") + '</button></div>';
+  const nb = fb.querySelector('[data-action="next"]');
+  nb.focus({ preventScroll: true });
+  fb.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
+}
+
+function onPick(i) {
+  if (S.done) return;
+  const q = LEVELS[S.li].qs[S.qi];
+  const btns = view.querySelectorAll('[data-action="pick"]');
+  btns.forEach((b, k) => {
+    b.disabled = true;
+    if (k === q.answer) b.classList.add("correct");
+    else if (k === i) b.classList.add("wrong");
+  });
+  finish(i === q.answer ? 1 : 0, i === q.answer ? "" : "The answer is <b>" + q.options[q.answer] + "</b>.");
+}
+
+function onCheckNum() {
+  if (S.done) return;
+  const q = LEVELS[S.li].qs[S.qi];
+  const inp = document.getElementById("num-input");
+  const v = parseNum(inp.value);
+  if (isNaN(v)) { inp.placeholder = "Enter a number first"; inp.focus(); return; }
+  const ok = Math.abs(v - q.answer) <= (q.tol || 0.5);
+  inp.disabled = true;
+  inp.parentElement.classList.add(ok ? "correct" : "wrong");
+  view.querySelector('[data-action="check-num"]').disabled = true;
+  finish(ok ? 1 : 0, ok ? "" : "You entered " + fmt(v) + ". The answer is <b>" + fmt(q.answer) + "</b>.");
+}
+
+function onCheckAlloc() {
+  if (S.done) return;
+  const q = LEVELS[S.li].qs[S.qi];
+  const tot = q.items.reduce((a, it) => a + it.ssp, 0);
+  const vals = q.items.map((it, i) => parseNum(document.getElementById("alloc-" + i).value));
+  if (vals.some(isNaN)) {
+    const bad = vals.findIndex(isNaN);
+    document.getElementById("alloc-" + bad).focus();
+    return;
+  }
+  let right = 0;
+  const answers = q.items.map(it => Math.round(q.price * it.ssp / tot));
+  q.items.forEach((it, i) => {
+    const el = document.getElementById("alloc-" + i);
+    const ok = Math.abs(vals[i] - answers[i]) <= 1;
+    if (ok) right++;
+    el.disabled = true;
+    el.classList.add(ok ? "correct" : "wrong");
+  });
+  view.querySelector('[data-action="check-alloc"]').disabled = true;
+  const split = '<span class="split" style="display:flex" role="img" aria-label="Correct allocation">' + q.items.map((it, i) =>
+    '<div style="flex:' + answers[i] + '" title="' + it.name + '">' + fmt(answers[i]) + '</div>').join("") + '</span>';
+  const list = q.items.map((it, i) => it.name + " <b>" + fmt(answers[i]) + "</b>").join(" · ");
+  finish(right / q.items.length, split + '<span style="display:block;margin-top:8px">Correct allocation: ' + list + '</span>');
+}
+
+function onSort(item, bin) {
+  if (S.done) return;
+  S.picks[item] = bin;
+  const row = document.getElementById("sort-" + item);
+  row.querySelectorAll("button").forEach(b => {
+    const on = Number(b.dataset.bin) === bin;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+  const left = S.picks.filter(p => p < 0).length;
+  document.getElementById("sort-left").textContent = left ? left + " left to sort" : "All sorted";
+  view.querySelector('[data-action="check-sort"]').disabled = left > 0;
+}
+
+function onCheckSort() {
+  if (S.done) return;
+  const q = LEVELS[S.li].qs[S.qi];
+  let right = 0;
+  q.items.forEach((it, i) => {
+    const row = document.getElementById("sort-" + i);
+    const ok = S.picks[i] === it.bin;
+    if (ok) right++;
+    row.classList.add(ok ? "correct" : "wrong");
+    row.querySelectorAll("button").forEach(b => { b.disabled = true; });
+    const why = document.createElement("span");
+    why.className = "why";
+    why.innerHTML = (ok ? "" : "<b>" + q.bins[it.bin] + ".</b> ") + it.why;
+    row.appendChild(why);
+  });
+  view.querySelector('[data-action="check-sort"]').disabled = true;
+  finish(right / q.items.length, "You sorted " + right + " of " + q.items.length + " correctly.");
+}
+
+function onNext() {
+  const l = LEVELS[S.li];
+  if (S.qi < l.qs.length - 1) { S.qi++; renderQuestion(); }
+  else renderResults();
+}
+
+/* ---------- Results ---------- */
+function renderResults() {
+  const l = LEVELS[S.li];
+  const sum = S.results.reduce((a, r) => a + r.score, 0);
+  const pct = sum / l.qs.length;
+  const stars = starsFor(pct);
+  const prev = progress[l.id];
+  const best = !prev || S.xp > prev.xp;
+  if (best) progress[l.id] = { xp: S.xp, stars: Math.max(stars, prev ? prev.stars : 0) };
+  else if (stars > prev.stars) progress[l.id].stars = stars;
+  save();
+  updateTopbar();
+
+  const headline = stars === 3 ? "Clean audit opinion" : stars === 2 ? "Minor adjustments" : stars === 1 ? "Management letter points" : "Back to the standard";
+  const nextLi = S.li < LEVELS.length - 1 ? S.li + 1 : -1;
+  const review = S.results.map(r => {
+    const c = r.score >= 0.999 ? "good" : r.score > 0 ? "mid" : "bad";
+    const label = r.scenario ? r.scenario.split(". ")[0].replace(/\.$/, "") + "." : r.prompt;
+    return '<div class="review-item"><span class="dot ' + c + '"></span><span>' + label + '</span></div>';
+  }).join("");
+
+  view.innerHTML =
+    '<div class="stage">' +
+      '<div class="crumbs"><button class="back" data-action="home">← Level map</button><span class="eyebrow">' + l.step + ' complete</span></div>' +
+      '<article class="card results">' +
+        starsRow(stars, true) +
+        '<h2>' + headline + '</h2>' +
+        '<p class="hint">' + l.title + (best ? ' · <span class="new-best">New best score</span>' : "") + '</p>' +
+        '<div class="stats">' +
+          '<div class="stat"><b>' + Math.round(pct * 100) + '%</b><span>Accuracy</span></div>' +
+          '<div class="stat"><b>' + S.xp + '</b><span>XP this run</span></div>' +
+          '<div class="stat"><b>' + totalXp().toLocaleString("en-US") + '</b><span>Total XP</span></div>' +
+        '</div>' +
+        '<div class="review">' + review + '</div>' +
+        '<div class="actions">' +
+          (nextLi >= 0 ? '<button class="btn" data-action="intro" data-level="' + nextLi + '">Next: ' + LEVELS[nextLi].title + ' →</button>' : '<button class="btn" data-action="home">Back to the map</button>') +
+          '<button class="btn ghost" data-action="start-again">Replay level</button>' +
+        '</div>' +
+      '</article>' +
+    '</div>';
+  scrollTop();
+  if (stars === 3) confetti();
+}
+
+/* ---------- Confetti ---------- */
+function confetti() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = document.getElementById("confetti");
+  const ctx = c.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  c.width = innerWidth * dpr; c.height = innerHeight * dpr;
+  ctx.scale(dpr, dpr);
+  const cs = getComputedStyle(document.documentElement);
+  const cols = ["--accent", "--gold", "--good", "--ink"].map(v => cs.getPropertyValue(v).trim());
+  const ps = Array.from({ length: 140 }, () => ({
+    x: innerWidth / 2 + (Math.random() - .5) * 160, y: innerHeight * 0.35,
+    vx: (Math.random() - .5) * 12, vy: -Math.random() * 12 - 4,
+    w: 6 + Math.random() * 6, h: 4 + Math.random() * 4, r: Math.random() * 6, vr: (Math.random() - .5) * .3,
+    c: cols[Math.floor(Math.random() * cols.length)]
+  }));
+  const t0 = performance.now();
+  (function frame(t) {
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    ps.forEach(p => {
+      p.vy += 0.35; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+    });
+    if (t - t0 < 2600) requestAnimationFrame(frame);
+    else ctx.clearRect(0, 0, innerWidth, innerHeight);
+  })(t0);
+}
+
+/* ---------- Events ---------- */
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-action]");
+  if (!el || el.disabled) return;
+  const a = el.dataset.action;
+  if (a !== "reset" && resetArmed) resetArmed = false;
+  switch (a) {
+    case "home": renderHome(); scrollTop(); break;
+    case "intro": renderIntro(Number(el.dataset.level)); break;
+    case "start": startLevel(S.li); break;
+    case "start-again": startLevel(S.li); break;
+    case "pick": onPick(Number(el.dataset.i)); break;
+    case "check-num": onCheckNum(); break;
+    case "check-alloc": onCheckAlloc(); break;
+    case "sort": onSort(Number(el.dataset.item), Number(el.dataset.bin)); break;
+    case "check-sort": onCheckSort(); break;
+    case "next": onNext(); break;
+    case "reset":
+      if (!resetArmed) { resetArmed = true; el.textContent = "Click again to erase all progress"; el.classList.add("armed"); }
+      else { resetArmed = false; progress = {}; save(); renderHome(); }
+      break;
+  }
+});
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter" || !S || S.done || S.qi === undefined) return;
+  const t = e.target;
+  if (t.id === "num-input") { e.preventDefault(); onCheckNum(); }
+  else if (t.id && t.id.indexOf("alloc-") === 0) {
+    e.preventDefault();
+    const n = Number(t.id.slice(6)) + 1;
+    const nx = document.getElementById("alloc-" + n);
+    if (nx) nx.focus(); else onCheckAlloc();
+  }
+});
+
+renderHome();
+})();
+</script>
