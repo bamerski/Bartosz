@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>IFRS 15 Revenue Quest</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -206,6 +207,11 @@ button:disabled { cursor: default; }
 @keyframes wag { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(6deg); } }
 @keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
 .fox-wrap.tilt .head { animation: tilt 1.8s ease-in-out; }
+.fox-art { user-select: none; -webkit-user-drag: none; filter: drop-shadow(0 10px 12px var(--shadow)); }
+.fox-wrap.tilt .fox-art { animation: tiltArt 1.8s ease-in-out; }
+@keyframes tiltArt { 0%, 100% { rotate: 0deg; } 25%, 70% { rotate: -6deg; } }
+.pal .fox-art, .story-banner .fox-art { animation: breathe 4.5s ease-in-out infinite; }
+@keyframes breathe { 0%, 100% { scale: 1; } 50% { scale: 1.025; } }
 @keyframes tilt { 0% { transform: rotate(0); } 20%, 70% { transform: rotate(-13deg); } 100% { transform: rotate(0); } }
 .fox-wrap.hop { animation: hop .7s cubic-bezier(.3, 1.6, .5, 1); }
 @keyframes hop { 0%, 100% { transform: translateY(0); } 35% { transform: translateY(-18px); } }
@@ -963,7 +969,18 @@ function foxSvg(stage, o) {
   return '<svg class="fox" viewBox="0 0 200 200" style="transform:scale(' + sc + ')" role="img" aria-label="' + (o.label || "Fox cub") + '">' + foxInner(stage, o) + '</svg>';
 }
 function scarfColor() { return comp.scarves > 0 ? CRAY[(comp.scarves - 1) % CRAY.length] : null; }
-function curFox(o) { return foxSvg(comp.stage, Object.assign({ scarf: scarfColor(), label: nm() + ", your fox cub, " + STAGES[comp.stage].name.toLowerCase() }, o || {})); }
+/* Illustrated fox poses (assets/fox/*.webp). The SVG fox above is still used in scrapbook scenes and the wish animation. */
+function foxImg(pose, label, sc) {
+  return '<img class="fox fox-art" src="assets/fox/' + pose + '.webp" alt="' + label + '" width="480" height="480" decoding="async" draggable="false"' +
+    (sc && sc !== 1 ? ' style="transform:scale(' + sc + ')"' : "") + '>';
+}
+function restPose() { return comp.stage >= 4 ? "wise" : "idle"; }
+function curFox(o) {
+  o = o || {};
+  const sc = [0.84, 0.9, 0.95, 1, 1][comp.stage] || 1;
+  return foxImg(o.pose || restPose(), o.label || nm() + ", your fox cub, " + STAGES[comp.stage].name.toLowerCase(), sc);
+}
+["cheer", "tilt", "knit", "idle", "wise"].forEach(p => { const i = new Image(); i.src = "assets/fox/" + p + ".webp"; });
 function nestFox(x, y, size, stage, o) { return '<svg x="' + x + '" y="' + y + '" width="' + size + '" height="' + size + '" viewBox="0 0 200 200">' + foxInner(stage, o) + '</svg>'; }
 
 /* story glyphs, 24-unit boxes */
@@ -1338,7 +1355,7 @@ function dockReact(l, q, score, cr, second) {
     line = say(pick(TILT_FINAL));
   }
   if (cr.golden) line += " And a golden acorn! +10.";
-  wrap.innerHTML = curFox();
+  wrap.innerHTML = curFox({ pose: anim === "hop" ? "cheer" : anim });
   setBubble(line);
   animate(wrap, anim);
   const filled = S.results.filter(r => r.score >= 0.5).length;
@@ -1373,7 +1390,7 @@ function greeting() { const h = new Date().getHours(); return h < 5 ? "Hello, ni
 function adoptCard() {
   const re = renaming && adopted();
   return '<aside class="pal adopt" aria-label="' + (re ? "Rename your fox" : "Adopt a fox cub") + '">' +
-    '<div class="fox-wrap big">' + (re ? curFox() : foxSvg(0, { sleep: true, basket: true, label: "A sleeping fox cub in a basket" })) + '</div>' +
+    '<div class="fox-wrap big">' + (re ? curFox() : foxImg("sleep", "A fox cub asleep in a wicker basket")) + '</div>' +
     '<span class="eyebrow">' + (re ? "Rename" : "A new friend") + '</span>' +
     '<h2>' + (re ? "What should we call them now?" : "A fox cub has curled up under your desk.") + '</h2>' +
     (re ? "" : '<p class="hint">Give them a name and they\'ll cheer you through every case. They grow as you earn acorns, knit a scarf from over-time answers, and turn your levels into a wish that comes true.</p>') +
@@ -1630,7 +1647,11 @@ function showRetry() {
   const line = adopted() ? say(pick(TILT_RETRY)) : "Not quite. Have another look?";
   fb.className = "fb retry";
   fb.innerHTML = '<div class="retry-row"><p>' + line + ' A correct second try earns half XP.</p><button class="btn ghost small" data-action="reveal">Show me the answer</button></div>';
-  if (adopted()) { setBubble(line); animate(document.getElementById("dock-fox"), "tilt"); }
+  if (adopted()) {
+    setBubble(line);
+    const w = document.getElementById("dock-fox");
+    if (w) { w.innerHTML = curFox({ pose: "tilt" }); animate(w, "tilt"); }
+  }
 }
 
 function finish(score, detail, second) {
@@ -1835,7 +1856,7 @@ function renderResults() {
           '<div class="stat"><b>' + S.xp + '</b><span>XP this run</span></div>' +
           '<div class="stat"><b>' + totalXp().toLocaleString("en-US") + '</b><span>Total XP</span></div>' +
         '</div>' +
-        (storyText ? '<div class="story-result"><div class="fox-wrap' + (stars >= 1 ? " wiggle" : " tilt") + '">' + curFox() + '</div><p>' + storyText + '</p></div>' : "") +
+        (storyText ? '<div class="story-result"><div class="fox-wrap' + (stars >= 1 ? " wiggle" : " tilt") + '">' + curFox({ pose: stars >= 1 ? "cheer" : "tilt" }) + '</div><p>' + storyText + '</p></div>' : "") +
         '<div class="review">' + review + '</div>' +
         '<div class="actions">' +
           (nextLi >= 0 ? '<button class="btn" data-action="intro" data-level="' + nextLi + '">Next: ' + LEVELS[nextLi].title + ' →</button>' : '<button class="btn" data-action="home">Back to the map</button>') +
@@ -1884,6 +1905,12 @@ function confetti() {
 function pet() {
   const wrap = document.getElementById("den-fox");
   if (!wrap) return;
+  const im = wrap.querySelector("img");
+  if (im) {
+    im.src = "assets/fox/cheer.webp";
+    clearTimeout(wrap._pose);
+    wrap._pose = setTimeout(() => { im.src = "assets/fox/" + restPose() + ".webp"; }, 1700);
+  }
   animate(wrap, "wiggle");
   if (!reduced()) for (let i = 0; i < 3; i++) setTimeout(() => fx(wrap, "heart", '<svg viewBox="0 0 24 24"><path d="' + HEART + '" fill="var(--blush)"/></svg>', { dx: (Math.random() * 80 - 50) + "px" }), i * 160);
   const b = document.getElementById("den-bubble");
